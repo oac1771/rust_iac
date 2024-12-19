@@ -3,14 +3,14 @@ use state_macro::state;
 #[state]
 mod foo {
 
-    #[resource]
+    #[resource()]
     struct ResourceA {
-        id_a: String
+        id_a: String,
     }
 
-    #[resource]
+    #[resource()]
     struct ResourceB {
-        id_b: String
+        id_b: String,
     }
 }
 

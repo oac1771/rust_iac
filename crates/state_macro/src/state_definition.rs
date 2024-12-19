@@ -40,7 +40,7 @@ impl TryFrom<ItemMod> for StateDefintion {
             let state_attribute: Option<StateAttribute> = take_first_item_state_attr(&item)?;
 
             match state_attribute {
-                Some(StateAttribute::Resource) => {
+                Some(StateAttribute::Resource(_foo)) => {
                     let resource = ResourceDef::try_from(item)?;
                     resources.push(resource);
                 }
