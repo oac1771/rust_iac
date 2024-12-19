@@ -1,3 +1,4 @@
+use crate::state_attribute::ResourceField;
 use quote::quote;
 use syn::{spanned::Spanned, Item, ItemStruct};
 
@@ -6,7 +7,7 @@ pub(crate) struct ResourceDef {
 }
 
 impl ResourceDef {
-    pub(crate) fn try_from(item: Item) -> syn::Result<Self> {
+    pub(crate) fn try_from(item: Item, resource_field: ResourceField) -> syn::Result<Self> {
         let item_struct = if let Item::Struct(item) = item {
             item
         } else {

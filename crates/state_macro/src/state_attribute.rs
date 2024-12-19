@@ -9,20 +9,7 @@ pub(crate) enum StateAttribute {
 }
 
 pub(crate) struct ResourceField {
-    fields: Punctuated<Ident, Token![=]>,
-}
-
-impl Parse for ResourceField {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        let content;
-        syn::parenthesized!(content in input);
-
-        // add name validation here
-
-        Ok(Self {
-            fields: content.parse_terminated(Ident::parse, Token![=])?,
-        })
-    }
+    name_val: Ident,
 }
 
 impl Parse for StateAttribute {
@@ -42,6 +29,34 @@ impl Parse for StateAttribute {
         } else {
             Err(lookahead.error())
         }
+    }
+}
+
+impl Parse for ResourceField {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let content;
+        syn::parenthesized!(content in input);
+
+        let metaitem: Punctuated<Ident, Token![=]> =
+            content.parse_terminated(Ident::parse, Token![=])?;
+
+        let name_pos = metaitem
+            .iter()
+            .by_ref()
+            .position(|i| i.to_string() == "name")
+            .ok_or_else(|| {
+                syn::Error::new(
+                    input.span(),
+                    "Expected `name` metaitem in resource attribute",
+                )
+            })?;
+
+        let name_val = metaitem
+            .into_iter()
+            .nth(name_pos + 1)
+            .ok_or_else(|| syn::Error::new(input.span(), "`name` metaitem did not have value"))?;
+
+        Ok(Self { name_val })
     }
 }
 
@@ -69,25 +84,33 @@ mod test {
 
         let StateAttribute::Resource(resource_field) = result;
 
-        let mut fields = resource_field.fields.iter();
+        let name_val = resource_field.name_val;
 
-        assert_eq!(fields.next(), Some(ident).as_ref());
-        assert_eq!(fields.next(), Some(name).as_ref());
-        assert_eq!(fields.next(), None);
+        assert_eq!(name_val, name);
     }
 
     #[test]
-    fn test_resource_state_attribute_parses_correctly_without_items_inside_paranthesis() {
+    fn test_resource_state_attribute_returns_error_if_name_is_not_found() {
         let input = quote! {
-            #[resource()]
+            #[resource(foo = bar)]
         };
 
-        let result: StateAttribute = parse2(input).unwrap();
+        let err = parse2::<StateAttribute>(input).err().unwrap();
 
-        let StateAttribute::Resource(resource_field) = result;
+        assert_eq!(
+            err.to_string(),
+            "Expected `name` metaitem in resource attribute"
+        );
+    }
 
-        let mut fields = resource_field.fields.iter();
+    #[test]
+    fn test_resource_state_attribute_returns_error_if_name_does_not_have_value() {
+        let input = quote! {
+            #[resource(name = )]
+        };
 
-        assert_eq!(fields.next(), None);
+        let err = parse2::<StateAttribute>(input).err().unwrap();
+
+        assert_eq!(err.to_string(), "`name` metaitem did not have value");
     }
 }

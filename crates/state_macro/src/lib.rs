@@ -18,7 +18,7 @@ pub fn state(
         }
     };
 
-    let def = match StateDefintion::try_from(item_mod.clone()) {
+    let def = match StateDefintion::try_from(item_mod) {
         Ok(def) => def,
         Err(err) => return err.to_compile_error().into(),
     };

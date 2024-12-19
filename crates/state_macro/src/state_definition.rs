@@ -2,8 +2,7 @@ use quote::quote;
 use syn::{spanned::Spanned, ItemMod};
 
 use crate::{
-    resource::ResourceDef, state_attribute::StateAttribute,
-    state_helpers::take_first_item_state_attr,
+    resource::ResourceDef, state_attribute::StateAttribute, state_helpers::get_item_attribute,
 };
 
 pub(crate) struct StateDefintion {
@@ -37,11 +36,11 @@ impl TryFrom<ItemMod> for StateDefintion {
         let mut resources: Vec<ResourceDef> = Vec::new();
 
         for item in items {
-            let state_attribute: Option<StateAttribute> = take_first_item_state_attr(&item)?;
+            let state_attribute: Option<StateAttribute> = get_item_attribute(&item)?;
 
             match state_attribute {
-                Some(StateAttribute::Resource(_foo)) => {
-                    let resource = ResourceDef::try_from(item)?;
+                Some(StateAttribute::Resource(resource_field)) => {
+                    let resource = ResourceDef::try_from(item, resource_field)?;
                     resources.push(resource);
                 }
                 None => {}

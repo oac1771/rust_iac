@@ -14,7 +14,7 @@ impl ItemAttrs for Item {
     }
 }
 
-pub(crate) fn take_first_item_state_attr<Attr>(item: &impl ItemAttrs) -> syn::Result<Option<Attr>>
+pub(crate) fn get_item_attribute<Attr>(item: &impl ItemAttrs) -> syn::Result<Option<Attr>>
 where
     Attr: Parse,
 {
