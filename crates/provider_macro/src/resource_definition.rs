@@ -1,5 +1,5 @@
 use quote::ToTokens;
-use syn::{spanned::Spanned, Item, ItemStruct};
+use syn::{spanned::Spanned, token::Pub, Item, ItemStruct, Visibility};
 
 pub(crate) struct ResourceDef {
     item_struct: ItemStruct,
@@ -7,6 +7,7 @@ pub(crate) struct ResourceDef {
 
 impl ResourceDef {
     pub(crate) fn try_from(item: Item) -> syn::Result<Self> {
+        let span = item.span();
         let mut item_struct = if let Item::Struct(item) = item {
             item
         } else {
@@ -17,11 +18,14 @@ impl ResourceDef {
         };
 
         item_struct.attrs = vec![];
+        item_struct.vis = Visibility::Public(Pub(span));
+        item_struct.fields.iter_mut().for_each(|f|f.vis = Visibility::Public(Pub(span)));
 
         Ok(Self { item_struct })
     }
 
     pub(crate) fn expand(self) -> proc_macro2::TokenStream {
+        println!(">>> {}", self.item_struct.to_token_stream());
         self.item_struct.to_token_stream()
     }
 }

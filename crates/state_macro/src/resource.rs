@@ -27,11 +27,7 @@ impl Resource {
     }
 
     pub(crate) fn expand(self) -> proc_macro2::TokenStream {
-        let struct_token = self.item_struct.struct_token;
-        let struct_ident = self.item_struct.ident;
 
-        quote! {
-            pub #struct_token #struct_ident;
-        }
+        quote! {}
     }
 }
