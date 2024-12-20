@@ -1,7 +1,6 @@
 mod resource;
 mod state_attribute;
 mod state_definition;
-mod state_helpers;
 
 use state_definition::StateDefintion;
 use syn::{parse2, ItemMod};

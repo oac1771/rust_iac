@@ -1,12 +1,11 @@
+use helpers::get_item_attribute;
 use quote::quote;
 use syn::{spanned::Spanned, ItemMod};
 
-use crate::{
-    resource::ResourceDef, state_attribute::StateAttribute, state_helpers::get_item_attribute,
-};
+use crate::{resource::Resource, state_attribute::StateAttribute};
 
 pub(crate) struct StateDefintion {
-    resources: Vec<ResourceDef>,
+    resources: Vec<Resource>,
 }
 
 impl StateDefintion {
@@ -35,14 +34,14 @@ impl TryFrom<ItemMod> for StateDefintion {
             })?
             .1;
 
-        let mut resources: Vec<ResourceDef> = Vec::new();
+        let mut resources: Vec<Resource> = Vec::new();
 
         for item in items {
             let state_attribute: Option<StateAttribute> = get_item_attribute(&item)?;
 
             match state_attribute {
                 Some(StateAttribute::Resource(resource_field)) => {
-                    let resource = ResourceDef::try_from(item, resource_field)?;
+                    let resource = Resource::try_from(item, resource_field)?;
                     resources.push(resource);
                 }
                 None => {}

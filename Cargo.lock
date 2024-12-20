@@ -3,6 +3,15 @@
 version = 3
 
 [[package]]
+name = "helpers"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "proc-macro2"
 version = "1.0.92"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -15,6 +24,7 @@ dependencies = [
 name = "provider_macro"
 version = "0.1.0"
 dependencies = [
+ "helpers",
  "proc-macro2",
  "quote",
  "syn",
@@ -41,6 +51,7 @@ dependencies = [
 name = "state_macro"
 version = "0.1.0"
 dependencies = [
+ "helpers",
  "proc-macro2",
  "quote",
  "syn",

@@ -1,21 +1,23 @@
+mod provider_attribute;
 mod provider_definition;
+mod resource_definition;
 
 use crate::provider_definition::ProviderDefinition;
-use syn::{parse2, ItemStruct};
+use syn::{parse2, ItemMod};
 
 #[proc_macro_attribute]
 pub fn provider(
     _attrs: proc_macro::TokenStream,
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
-    let item_struct = match parse2::<ItemStruct>(input.into()) {
-        Ok(item_struct) => item_struct,
+    let item_mod = match parse2::<ItemMod>(input.into()) {
+        Ok(item_mod) => item_mod,
         Err(err) => {
             return err.to_compile_error().into();
         }
     };
 
-    let _def = match ProviderDefinition::try_from(item_struct) {
+    let _def = match ProviderDefinition::try_from(item_mod) {
         Ok(def) => def,
         Err(err) => return err.to_compile_error().into(),
     };

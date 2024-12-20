@@ -1,3 +1,8 @@
 [workspace]
 resolver = "2"
-members = [ "crates/provider_macro", "crates/state","crates/state_macro"]
+members = [ "crates/helpers", "crates/provider_macro", "crates/state","crates/state_macro"]
+
+[workspace.dependencies]
+quote = "1.0"
+proc-macro2 = "1.0.60"
+syn = "2.0.9"

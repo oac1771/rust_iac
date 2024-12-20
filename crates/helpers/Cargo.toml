@@ -1,5 +1,5 @@
 [package]
-name = "state_macro"
+name = "helpers"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,7 +7,3 @@ edition = "2021"
 quote = { workspace = true }
 proc-macro2 = { workspace = true }
 syn = { workspace = true, features = ["full"] }
-helpers = { path = "../helpers" }
-
-[lib]
-proc-macro = true

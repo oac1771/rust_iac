@@ -2,12 +2,12 @@ use crate::state_attribute::ResourceField;
 use quote::quote;
 use syn::{spanned::Spanned, Ident, Item, ItemStruct};
 
-pub(crate) struct ResourceDef {
+pub(crate) struct Resource {
     item_struct: ItemStruct,
     _name_val: Ident,
 }
 
-impl ResourceDef {
+impl Resource {
     pub(crate) fn try_from(item: Item, resource_field: ResourceField) -> syn::Result<Self> {
         let item_struct = if let Item::Struct(item) = item {
             item
