@@ -1,4 +1,4 @@
-use quote::ToTokens;
+use quote::{quote, ToTokens};
 use syn::{spanned::Spanned, token::Pub, Item, ItemStruct, Visibility};
 
 pub(crate) struct ResourceDef {
@@ -25,7 +25,11 @@ impl ResourceDef {
     }
 
     pub(crate) fn expand(self) -> proc_macro2::TokenStream {
-        println!(">>> {}", self.item_struct.to_token_stream());
-        self.item_struct.to_token_stream()
+        let item_struct = self.item_struct.to_token_stream();
+
+        quote! {
+            #[allow(dead_code)]
+            #item_struct
+        }
     }
 }

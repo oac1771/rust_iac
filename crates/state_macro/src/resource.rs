@@ -4,7 +4,7 @@ use syn::{spanned::Spanned, Ident, Item, ItemStruct};
 
 pub(crate) struct Resource {
     item_struct: ItemStruct,
-    _name_val: Ident,
+    name_val: Ident,
 }
 
 impl Resource {
@@ -18,15 +18,21 @@ impl Resource {
             ));
         };
 
-        let _name_val = resource_field.name_val;
+        let name_val = resource_field.name_val;
 
         Ok(Self {
             item_struct,
-            _name_val,
+            name_val,
         })
     }
 
     pub(crate) fn expand(self) -> proc_macro2::TokenStream {
+
+        // let name = self.name_val;
+
+        // quote! {
+        //     let #name: Ident;
+        // }
 
         quote! {}
     }
