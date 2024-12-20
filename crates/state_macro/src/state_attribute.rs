@@ -9,7 +9,7 @@ pub(crate) enum StateAttribute {
 }
 
 pub(crate) struct ResourceField {
-    name_val: Ident,
+    pub(crate) name_val: Ident,
 }
 
 impl Parse for StateAttribute {

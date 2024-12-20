@@ -5,3 +5,4 @@ edition = "2021"
 
 [dependencies]
 state_macro = { path = "../state_macro" }
+provider_macro = { path = "../provider_macro" }

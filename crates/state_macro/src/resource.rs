@@ -1,9 +1,10 @@
 use crate::state_attribute::ResourceField;
 use quote::quote;
-use syn::{spanned::Spanned, Item, ItemStruct};
+use syn::{spanned::Spanned, Ident, Item, ItemStruct};
 
 pub(crate) struct ResourceDef {
     item_struct: ItemStruct,
+    _name_val: Ident,
 }
 
 impl ResourceDef {
@@ -17,15 +18,20 @@ impl ResourceDef {
             ));
         };
 
-        Ok(Self { item_struct })
+        let _name_val = resource_field.name_val;
+
+        Ok(Self {
+            item_struct,
+            _name_val,
+        })
     }
 
     pub(crate) fn expand(self) -> proc_macro2::TokenStream {
         let struct_token = self.item_struct.struct_token;
-        let ident = self.item_struct.ident;
+        let struct_ident = self.item_struct.ident;
 
         quote! {
-            #struct_token #ident;
+            pub #struct_token #struct_ident;
         }
     }
 }

@@ -14,7 +14,9 @@ impl StateDefintion {
         let resources_impls = self.resources.into_iter().map(|r| r.expand());
 
         quote! {
-            #(#resources_impls)*
+            mod state {
+                #(#resources_impls)*
+            }
         }
     }
 }
