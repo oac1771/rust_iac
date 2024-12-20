@@ -17,10 +17,10 @@ pub fn provider(
         }
     };
 
-    let _def = match ProviderDefinition::try_from(item_mod) {
+    let def = match ProviderDefinition::try_from(item_mod) {
         Ok(def) => def,
         Err(err) => return err.to_compile_error().into(),
     };
 
-    quote::quote! {}.into()
+    def.expand().into()
 }

@@ -1,3 +1,4 @@
+use crate::provider::dummy_provider::prelude::*;
 use state_macro::state;
 
 #[state]
