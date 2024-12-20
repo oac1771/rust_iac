@@ -27,7 +27,6 @@ impl Resource {
     }
 
     pub(crate) fn expand(self) -> proc_macro2::TokenStream {
-
         // let name = self.name_val;
 
         // quote! {

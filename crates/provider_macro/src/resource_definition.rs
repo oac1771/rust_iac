@@ -19,7 +19,10 @@ impl ResourceDef {
 
         item_struct.attrs = vec![];
         item_struct.vis = Visibility::Public(Pub(span));
-        item_struct.fields.iter_mut().for_each(|f|f.vis = Visibility::Public(Pub(span)));
+        item_struct
+            .fields
+            .iter_mut()
+            .for_each(|f| f.vis = Visibility::Public(Pub(span)));
 
         Ok(Self { item_struct })
     }
