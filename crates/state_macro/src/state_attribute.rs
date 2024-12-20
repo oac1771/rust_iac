@@ -18,16 +18,13 @@ impl Parse for StateAttribute {
         let content;
         syn::bracketed!(content in input);
 
-        let lookahead = content.lookahead1();
-
-        if lookahead.peek(keyword::resource) {
+        if content.peek(keyword::resource) {
             content.parse::<keyword::resource>()?;
-
             let resource_field = content.parse::<ResourceField>()?;
 
             Ok(Self::Resource(resource_field))
         } else {
-            Err(lookahead.error())
+            Err(content.error("Expected keyword not found"))
         }
     }
 }

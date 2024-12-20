@@ -1,18 +1,27 @@
+use helpers::ItemAttrs;
+// use quote::{quote, ToTokens, TokenStreamExt};
 use syn::{
     braced,
     parse::{Parse, ParseStream},
-    Attribute, Expr, Ident, Token,
+    punctuated::Punctuated,
+    Attribute, FieldValue, Ident, Token,
 };
 
 pub(crate) struct StateModule {
     mod_name: Ident,
-    resources: Vec<Resource>,
+    resources: Vec<ItemResource>,
 }
 
-struct Resource {
-    name: Ident,
+pub(crate) struct ItemResource {
+    ident: Ident,
     attrs: Vec<Attribute>,
-    fields: Vec<(Ident, Expr)>,
+    fields: Punctuated<FieldValue, Token![,]>,
+}
+
+impl StateModule {
+    pub fn resources_iter(self) -> impl Iterator<Item = ItemResource> {
+        self.resources.into_iter()
+    }
 }
 
 impl Parse for StateModule {
@@ -27,7 +36,7 @@ impl Parse for StateModule {
         let mut resources = Vec::new();
 
         while !content.is_empty() {
-            let resource = content.parse::<Resource>()?;
+            let resource = content.parse::<ItemResource>()?;
             resources.push(resource);
         }
 
@@ -38,27 +47,18 @@ impl Parse for StateModule {
     }
 }
 
-impl Parse for Resource {
+impl Parse for ItemResource {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let attrs: Vec<Attribute> = input.call(Attribute::parse_outer)?;
-        let name: Ident = input.parse()?;
-
-        let mut fields = Vec::new();
+        let ident: Ident = input.parse()?;
 
         let content;
         braced!(content in input);
 
+        let mut fields: Punctuated<FieldValue, Token![,]> = Punctuated::new();
+
         while !content.is_empty() {
-            let field_name = content.parse::<Ident>()?;
-            content.parse::<Token![:]>()?;
-
-            let expr: syn::Expr = content.parse()?;
-
-            fields.push((field_name, expr));
-
-            if content.peek(Token![,]) {
-                content.parse::<Token![,]>()?;
-            }
+            fields = Punctuated::<FieldValue, Token![,]>::parse_terminated(&content)?;
         }
 
         if input.peek(Token![;]) {
@@ -66,10 +66,16 @@ impl Parse for Resource {
         }
 
         Ok(Self {
-            name,
+            ident,
             attrs,
             fields,
         })
+    }
+}
+
+impl ItemAttrs for ItemResource {
+    fn item_attrs(&self) -> Option<&Vec<Attribute>> {
+        Some(&self.attrs)
     }
 }
 
@@ -78,29 +84,40 @@ mod test {
     use super::*;
     use proc_macro2::Span;
     use quote::quote;
-    use syn::parse2;
+    use syn::{parse2, Expr, ExprLit, Lit, LitInt, Member};
 
     #[test]
     fn resource_parses_correctly() {
         let resource_name = Ident::new("DummyResourceA", Span::call_site());
         let field_name_1 = Ident::new("field_1", Span::call_site());
-        let field_name_2 = Ident::new("field_2", Span::call_site());
 
         let stream = quote! {
             #[foo(name = hello)]
-            #resource_name {#field_name_1: 10, #field_name_2: "bar"};
+            #resource_name {#field_name_1: 10};
         };
 
-        let resource = parse2::<Resource>(stream).unwrap();
+        let resource = parse2::<ItemResource>(stream).unwrap();
 
         let attrs = resource.attrs;
         let mut fields = resource.fields.iter();
-        let (res_field_1, exp_1) = fields.next().unwrap();
-        let (res_field_2, exp_2) = fields.next().unwrap();
+        let res_field_1 = fields.next().unwrap();
 
-        assert_eq!(resource.name, resource_name);
-        assert_eq!(*res_field_1, field_name_1);
-        assert_eq!(*res_field_2, field_name_2);
+        let Member::Named(ref field_1_ident) = res_field_1.member else {
+            panic!("Wrong member enum variant retunrned")
+        };
+        let Expr::Lit(ExprLit {
+            attrs: _,
+            lit: Lit::Int(ref lit_int),
+        }) = res_field_1.expr
+        else {
+            panic!("Wrong literal found")
+        };
+
+        let expected_val = LitInt::new("10", Span::call_site());
+
+        assert_eq!(resource.ident, resource_name);
+        assert_eq!(field_name_1, *field_1_ident);
+        assert_eq!(expected_val.base10_digits(), lit_int.base10_digits());
         assert!(!attrs.is_empty());
     }
 
@@ -113,7 +130,7 @@ mod test {
 
         let stream = quote! {
             mod #mod_name {
-                #[foo(name = hello)]
+                #[resource(name = hello)]
                 #resource_name {#field_name_1: 10, #field_name_2: "bar"};
             }
         };
