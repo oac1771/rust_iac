@@ -1,5 +1,4 @@
 use helpers::ItemAttrs;
-// use quote::{quote, ToTokens, TokenStreamExt};
 use syn::{
     braced,
     parse::{Parse, ParseStream},
@@ -7,25 +6,24 @@ use syn::{
     Attribute, FieldValue, Ident, Token,
 };
 
-pub(crate) struct StateModule {
+pub(crate) struct ItemState {
     resources: Vec<ItemResource>,
 }
 
 pub(crate) struct ItemResource {
-    pub ident: Ident,
-    pub attrs: Vec<Attribute>,
-    pub fields: Punctuated<FieldValue, Token![,]>,
+    pub(crate) ident: Ident,
+    pub(crate) attrs: Vec<Attribute>,
+    pub(crate) fields: Punctuated<FieldValue, Token![,]>,
 }
 
-impl StateModule {
-    pub fn resources_iter(self) -> impl Iterator<Item = ItemResource> {
+impl ItemState {
+    pub fn item_resources(self) -> impl Iterator<Item = ItemResource> {
         self.resources.into_iter()
     }
 }
 
-impl Parse for StateModule {
+impl Parse for ItemState {
     fn parse(input: ParseStream) -> syn::Result<Self> {
-
         let mut resources = Vec::new();
 
         while !input.is_empty() {
@@ -33,9 +31,7 @@ impl Parse for StateModule {
             resources.push(resource);
         }
 
-        Ok(Self {
-            resources,
-        })
+        Ok(Self { resources })
     }
 }
 
@@ -115,21 +111,17 @@ mod test {
 
     #[test]
     fn state_module_saves_correct_name() {
-        let mod_name = Ident::new("foo", Span::call_site());
         let resource_name = Ident::new("DummyResourceA", Span::call_site());
         let field_name_1 = Ident::new("field_1", Span::call_site());
         let field_name_2 = Ident::new("field_2", Span::call_site());
 
         let stream = quote! {
-            mod #mod_name {
                 #[resource(name = hello)]
                 #resource_name {#field_name_1: 10, #field_name_2: "bar"};
-            }
         };
 
-        let state_module = parse2::<StateModule>(stream).unwrap();
+        let state_module = parse2::<ItemState>(stream).unwrap();
 
-        assert_eq!(state_module.mod_name, mod_name);
         assert_eq!(state_module.resources.len(), 1);
     }
 }
