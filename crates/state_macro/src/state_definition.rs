@@ -13,7 +13,7 @@ impl StateDefintion {
 
         quote! {
             mod state {
-                #(#resources_impls)*
+                // #(#resources_impls)*
             }
         }
     }

@@ -7,9 +7,8 @@ use state_definition::StateDefintion;
 use state_module::StateModule;
 use syn::parse2;
 
-#[proc_macro_attribute]
+#[proc_macro]
 pub fn state(
-    _attrs: proc_macro::TokenStream,
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
     let state_mod = match parse2::<StateModule>(input.into()) {

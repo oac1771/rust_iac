@@ -8,14 +8,13 @@ use syn::{
 };
 
 pub(crate) struct StateModule {
-    mod_name: Ident,
     resources: Vec<ItemResource>,
 }
 
 pub(crate) struct ItemResource {
-    ident: Ident,
-    attrs: Vec<Attribute>,
-    fields: Punctuated<FieldValue, Token![,]>,
+    pub ident: Ident,
+    pub attrs: Vec<Attribute>,
+    pub fields: Punctuated<FieldValue, Token![,]>,
 }
 
 impl StateModule {
@@ -26,22 +25,15 @@ impl StateModule {
 
 impl Parse for StateModule {
     fn parse(input: ParseStream) -> syn::Result<Self> {
-        input.parse::<Token![mod]>()?;
-
-        let mod_name: Ident = input.parse()?;
-
-        let content;
-        braced!(content in input);
 
         let mut resources = Vec::new();
 
-        while !content.is_empty() {
-            let resource = content.parse::<ItemResource>()?;
+        while !input.is_empty() {
+            let resource = input.parse::<ItemResource>()?;
             resources.push(resource);
         }
 
         Ok(Self {
-            mod_name,
             resources,
         })
     }

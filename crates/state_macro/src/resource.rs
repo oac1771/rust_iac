@@ -22,10 +22,10 @@ impl Resource {
 
     pub(crate) fn expand(self) -> proc_macro2::TokenStream {
         let name = self.name_val;
-        let item_resource = self.item_resource;
+        let struct_name = self.item_resource.ident;
 
         quote! {
-            let #name =
+            let #name = #struct_name {}
         }
     }
 }
