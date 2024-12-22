@@ -1,10 +1,10 @@
-use crate::{item::ItemResource, state_attribute::ResourceField};
+use crate::{items::item_resource::ItemResource, state_attribute::ResourceField};
 use quote::quote;
 use syn::Ident;
 
 pub(crate) struct Resource {
-    item_resource: ItemResource,
-    name_val: Ident,
+    pub(crate) item_resource: ItemResource,
+    pub(crate) name_val: Ident,
 }
 
 impl Resource {

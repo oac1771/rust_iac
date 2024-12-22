@@ -1,9 +1,9 @@
-mod item;
+mod items;
 mod resource;
 mod state_attribute;
 mod state_definition;
 
-use item::ItemState;
+use items::item_state::ItemState;
 use state_definition::StateDefintion;
 use syn::parse2;
 

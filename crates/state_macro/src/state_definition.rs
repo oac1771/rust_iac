@@ -1,7 +1,7 @@
 use helpers::get_item_attribute;
 use quote::quote;
 
-use crate::{item::ItemState, resource::Resource, state_attribute::StateAttribute};
+use crate::{items::item_state::ItemState, resource::Resource, state_attribute::StateAttribute};
 
 pub(crate) struct StateDefintion {
     resources: Vec<Resource>,

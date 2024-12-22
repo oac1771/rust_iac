@@ -18,12 +18,7 @@ pub fn get_item_attribute<Attr>(item: &impl ItemAttrs) -> syn::Result<Option<Att
 where
     Attr: Parse,
 {
-    let Some(attrs) = item.item_attrs() else {
-        return Ok(None);
-    };
-
-    if !attrs.is_empty() {
-        let attr = &attrs[0];
+    if let Some(attr) = item.item_attrs().and_then(|attrs| attrs.iter().next()) {
         Ok(Some(parse2(attr.into_token_stream())?))
     } else {
         Ok(None)

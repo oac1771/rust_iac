@@ -1,9 +1,11 @@
 use helpers::ItemAttrs;
+use proc_macro2::Span;
+use quote::ToTokens;
 use syn::{
     braced,
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
-    Attribute, FieldValue, Ident, Token,
+    Attribute, Expr, FieldValue, Ident, Token,
 };
 
 pub(crate) struct ItemState {
@@ -19,6 +21,29 @@ pub(crate) struct ItemResource {
 impl ItemState {
     pub fn item_resources(self) -> impl Iterator<Item = ItemResource> {
         self.resources.into_iter()
+    }
+}
+
+impl ItemResource {
+    pub(crate) fn get_dependencies(&self) -> Vec<Ident> {
+        let dependencies = self
+            .fields
+            .iter()
+            .filter_map(|f| {
+                if let Expr::Field(expr_field) = &f.expr {
+                    let field_val = expr_field.to_token_stream().to_string();
+                    let mut dependency = field_val
+                        .split('.')
+                        .map(|f| Ident::new(f, Span::call_site()))
+                        .take(1);
+                    dependency.next()
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<Ident>>();
+
+        dependencies
     }
 }
 
