@@ -29,42 +29,7 @@ mod test {
     use super::*;
     use proc_macro2::Span;
     use quote::quote;
-    use syn::{parse2, Expr, ExprLit, Lit, LitInt, Member};
-
-    #[test]
-    fn resource_parses_correctly() {
-        let resource_name = Ident::new("DummyResourceA", Span::call_site());
-        let field_name_1 = Ident::new("field_1", Span::call_site());
-
-        let stream = quote! {
-            #[foo(name = hello)]
-            #resource_name {#field_name_1: 10};
-        };
-
-        let resource = parse2::<ItemResource>(stream).unwrap();
-
-        let attrs = resource.attrs;
-        let mut fields = resource.fields.iter();
-        let res_field_1 = fields.next().unwrap();
-
-        let Member::Named(ref field_1_ident) = res_field_1.member else {
-            panic!("Wrong member enum variant retunrned")
-        };
-        let Expr::Lit(ExprLit {
-            attrs: _,
-            lit: Lit::Int(ref lit_int),
-        }) = res_field_1.expr
-        else {
-            panic!("Wrong literal found")
-        };
-
-        let expected_val = LitInt::new("10", Span::call_site());
-
-        assert_eq!(resource.ident, resource_name);
-        assert_eq!(field_name_1, *field_1_ident);
-        assert_eq!(expected_val.base10_digits(), lit_int.base10_digits());
-        assert!(!attrs.is_empty());
-    }
+    use syn::{parse2, Ident};
 
     #[test]
     fn state_module_saves_correct_name() {
