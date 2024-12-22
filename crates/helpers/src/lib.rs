@@ -23,8 +23,8 @@ where
     };
 
     if !attrs.is_empty() {
-        let state_attr = &attrs[0];
-        Ok(Some(parse2(state_attr.into_token_stream())?))
+        let attr = &attrs[0];
+        Ok(Some(parse2(attr.into_token_stream())?))
     } else {
         Ok(None)
     }

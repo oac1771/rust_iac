@@ -1,6 +1,0 @@
-create provider attribute:
-    - should provide api interface (struct) for managing resources
-    - should provide resource structs
-
-
-see if you can create struct that has method which spits out token stream of struct definition
