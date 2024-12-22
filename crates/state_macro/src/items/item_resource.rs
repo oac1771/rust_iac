@@ -21,10 +21,14 @@ impl ItemResource {
             .iter()
             .filter_map(|f| {
                 if let Expr::Field(expr_field) = &f.expr {
-                    let field_val = expr_field.to_token_stream().to_string();
-                    let mut dependency = field_val
+                    let field_value = expr_field.to_token_stream().to_string();
+
+                    let mut dependency = field_value
                         .split('.')
-                        .map(|f| Ident::new(f, Span::call_site()))
+                        .map(|f| {
+                            let f = f.trim();
+                            Ident::new(f, Span::call_site())
+                        })
                         .take(1);
                     dependency.next()
                 } else {
@@ -45,11 +49,7 @@ impl Parse for ItemResource {
         let content;
         braced!(content in input);
 
-        let mut fields: Punctuated<FieldValue, Token![,]> = Punctuated::new();
-
-        while !content.is_empty() {
-            fields = Punctuated::<FieldValue, Token![,]>::parse_terminated(&content)?;
-        }
+        let fields = Punctuated::<FieldValue, Token![,]>::parse_terminated(&content)?;
 
         if input.peek(Token![;]) {
             input.parse::<Token![;]>()?;
@@ -74,7 +74,7 @@ mod test {
     use super::*;
     use proc_macro2::Span;
     use quote::quote;
-    use syn::{parse2, Expr, ExprLit, Lit, LitInt, Member};
+    use syn::{parse2, Expr, ExprLit, Ident, Lit, LitInt, Member};
 
     #[test]
     fn resource_parses_correctly() {
@@ -96,6 +96,7 @@ mod test {
         let Member::Named(ref field_1_ident) = res_field_1.member else {
             panic!("Wrong member enum variant retunrned")
         };
+
         let Expr::Lit(ExprLit {
             lit: Lit::Int(ref lit_int),
             ..
@@ -108,5 +109,53 @@ mod test {
         assert_eq!(field_name, *field_1_ident);
         assert_eq!(val_name.base10_digits(), lit_int.base10_digits());
         assert!(!attrs.is_empty());
+    }
+
+    #[test]
+    fn resource_gives_correct_dependencies() {
+        let val = Ident::new("bar", Span::call_site());
+
+        let stream = quote! {
+            #[foo(bar = zap)]
+            Foo {field_1: #val.field_1};
+        };
+
+        let resource = parse2::<ItemResource>(stream).unwrap();
+
+        let dependencies = resource.get_dependencies();
+        assert_eq!(val, dependencies[0]);
+    }
+
+    #[test]
+    fn resource_gives_correct_empty_dependencies() {
+        let stream = quote! {
+            #[foo(bar = zap)]
+            Foo {field_1: 10};
+        };
+
+        let resource = parse2::<ItemResource>(stream).unwrap();
+
+        let dependencies = resource.get_dependencies();
+        assert!(dependencies.is_empty());
+    }
+
+    #[test]
+    fn resource_gives_correct_multiple_dependencies() {
+        let val_1 = Ident::new("bar_1", Span::call_site());
+        let val_2 = Ident::new("bar_2", Span::call_site());
+
+        let stream = quote! {
+            #[foo(bar = zap)]
+            Foo {
+                field_1: #val_1.field_1,
+                field_2: #val_2.field_1,
+                field_3: 10,
+            };
+        };
+
+        let resource = parse2::<ItemResource>(stream).unwrap();
+
+        let dependencies = resource.get_dependencies();
+        assert_eq!(dependencies.len(), 2);
     }
 }
