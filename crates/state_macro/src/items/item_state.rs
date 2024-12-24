@@ -2,7 +2,7 @@ use super::item_resource::ItemResource;
 use syn::parse::{Parse, ParseStream};
 
 pub(crate) struct ItemState {
-    resources: Vec<ItemResource>,
+    pub(crate) resources: Vec<ItemResource>,
 }
 
 impl ItemState {
@@ -42,8 +42,8 @@ mod test {
                 #resource_name {#field_name_1: 10, #field_name_2: "bar"};
         };
 
-        let state_module = parse2::<ItemState>(stream).unwrap();
+        let item_state = parse2::<ItemState>(stream).unwrap();
 
-        assert_eq!(state_module.resources.len(), 1);
+        assert_eq!(item_state.resources.len(), 1);
     }
 }

@@ -73,10 +73,11 @@ impl StateDefintion {
             if visited.contains(&dep) {
                 return Ok(());
             }
+
             if visiting.contains(&dep) {
                 return Err(syn::Error::new(
                     Span::call_site(),
-                    format!("Cycle detected at '{}'", dep),
+                    format!("Cycle detected at '{}' dependency", dep),
                 ));
             }
 
@@ -102,7 +103,7 @@ impl StateDefintion {
                 .ok_or_else(|| {
                     syn::Error::new(
                         Span::call_site(),
-                        format!("Resource {} not found in resource list", dep.clone()),
+                        format!("Resource '{}' not found in resource list", dep.clone()),
                     )
                 })?;
 
@@ -134,5 +135,65 @@ impl TryFrom<ItemState> for StateDefintion {
         let resources = Self::resolve_dependencies(resources)?;
 
         Ok(Self { resources })
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use proc_macro2::Span;
+    use quote::quote;
+    use syn::{parse2, Ident};
+
+    #[test]
+    fn resolves_correct_dependency_tree() {
+        let resource = Ident::new("DummyResourceA", Span::call_site());
+        let resource_name_1 = Ident::new("resource_1", Span::call_site());
+        let resource_name_2 = Ident::new("resource_2", Span::call_site());
+        let resource_name_3 = Ident::new("resource_3", Span::call_site());
+
+        let stream = quote! {
+                #[resource(name = #resource_name_1)]
+                #resource {field_1: 10};
+
+                #[resource(name = #resource_name_2)]
+                #resource {field_1: #resource_name_1.field_1};
+
+                #[resource(name = #resource_name_3)]
+                #resource {field_1: #resource_name_2.field_1};
+        };
+
+        let item_state = parse2::<ItemState>(stream).unwrap();
+        let resources = StateDefintion::get_resources(item_state).unwrap();
+        let resources = StateDefintion::resolve_dependencies(resources).unwrap();
+
+        assert_eq!(resources[0].name_val, resource_name_1);
+        assert_eq!(resources[1].name_val, resource_name_2);
+        assert_eq!(resources[2].name_val, resource_name_3);
+    }
+
+    #[test]
+    fn detects_cycle() {
+        let resource = Ident::new("DummyResourceA", Span::call_site());
+        let resource_name_1 = Ident::new("resource_1", Span::call_site());
+        let resource_name_2 = Ident::new("resource_2", Span::call_site());
+        let resource_name_3 = Ident::new("resource_3", Span::call_site());
+
+        let stream = quote! {
+                #[resource(name = #resource_name_1)]
+                #resource {field_1: #resource_name_2.field_1};
+
+                #[resource(name = #resource_name_2)]
+                #resource {field_1: #resource_name_1.field_1};
+
+        };
+
+        let item_state = parse2::<ItemState>(stream).unwrap();
+        let resources = StateDefintion::get_resources(item_state).unwrap();
+        let err = StateDefintion::resolve_dependencies(resources)
+            .err()
+            .unwrap();
+
+        assert!(err.to_string().contains("Cycle detected at "))
     }
 }
