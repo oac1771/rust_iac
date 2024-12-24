@@ -13,10 +13,22 @@ pub(crate) struct StateDefintion {
 
 impl StateDefintion {
     pub(crate) fn expand(self) -> proc_macro2::TokenStream {
-        let resources_impls = self.resources.into_iter().map(|r| r.expand());
+        let resource_instantiation = self.resources.iter().map(|r| r.expand_instantiation());
+        let resource_name = self.resources.iter().map(|r| r.expand_name());
 
         quote! {
-            #(#resources_impls)*
+            struct State;
+
+            impl State {
+                #[allow(unused_variables)]
+                fn plan() {
+                    #(
+                        #resource_instantiation
+                        // println!(">>> {:?}", #resource_name);
+                    )*
+                }
+            }
+
         }
     }
 
@@ -177,7 +189,6 @@ mod test {
         let resource = Ident::new("DummyResourceA", Span::call_site());
         let resource_name_1 = Ident::new("resource_1", Span::call_site());
         let resource_name_2 = Ident::new("resource_2", Span::call_site());
-        let resource_name_3 = Ident::new("resource_3", Span::call_site());
 
         let stream = quote! {
                 #[resource(name = #resource_name_1)]

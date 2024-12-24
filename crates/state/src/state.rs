@@ -12,10 +12,4 @@ state! {
     DummyResourceA {
         id_a: 10,
     }
-
-    #[resource(name = bar)]
-    DummyResourceA {
-        id_a: zip.id_b,
-    }
-
 }

@@ -18,16 +18,23 @@ impl Resource {
         }
     }
 
-    pub(crate) fn expand(self) -> proc_macro2::TokenStream {
-        let name = self.name_val;
-        let struct_name = self.item_resource.ident;
+    pub(crate) fn expand_instantiation(&self) -> proc_macro2::TokenStream {
+        let name = &self.name_val;
+        let struct_name = &self.item_resource.ident;
         let fields = self.item_resource.fields.iter();
 
         quote! {
-            #[allow(non_upper_case_globals)]
-            const #name: #struct_name = #struct_name {
+            let #name: #struct_name = #struct_name {
                 #(#fields)*
             };
+        }
+    }
+
+    pub(crate) fn expand_name(&self) -> proc_macro2::TokenStream {
+        let name = &self.name_val;
+
+        quote! {
+            #name
         }
     }
 
