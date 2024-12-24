@@ -40,7 +40,7 @@ impl Parse for ResourceField {
         let name_pos = metaitem
             .iter()
             .by_ref()
-            .position(|i| i.to_string() == "name")
+            .position(|i| *i == "name")
             .ok_or_else(|| {
                 syn::Error::new(
                     input.span(),

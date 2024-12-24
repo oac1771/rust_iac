@@ -2,6 +2,7 @@ use crate::{items::item_resource::ItemResource, state_attribute::ResourceField};
 use quote::quote;
 use syn::Ident;
 
+#[derive(Clone)]
 pub(crate) struct Resource {
     pub(crate) item_resource: ItemResource,
     pub(crate) name_val: Ident,
@@ -28,5 +29,13 @@ impl Resource {
                 #(#fields)*
             };
         }
+    }
+
+    pub(crate) fn get_dependencies(&self) -> Vec<Ident> {
+        self.item_resource.get_dependencies()
+    }
+
+    pub(crate) fn name(&self) -> String {
+        self.name_val.to_string()
     }
 }

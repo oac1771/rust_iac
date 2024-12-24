@@ -8,6 +8,7 @@ use syn::{
     Attribute, Expr, FieldValue, Ident, Token,
 };
 
+#[derive(Clone)]
 pub(crate) struct ItemResource {
     pub(crate) ident: Ident,
     pub(crate) attrs: Vec<Attribute>,
@@ -23,13 +24,10 @@ impl ItemResource {
                 if let Expr::Field(expr_field) = &f.expr {
                     let field_value = expr_field.to_token_stream().to_string();
 
-                    let mut dependency = field_value
-                        .split('.')
-                        .map(|f| {
-                            let f = f.trim();
-                            Ident::new(f, Span::call_site())
-                        })
-                        .take(1);
+                    let mut dependency = field_value.split('.').map(|f| {
+                        let f = f.trim();
+                        Ident::new(f, Span::call_site())
+                    });
                     dependency.next()
                 } else {
                     None
