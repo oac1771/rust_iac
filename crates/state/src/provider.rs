@@ -3,6 +3,9 @@ use provider_macro::provider;
 #[provider]
 mod dummy_provider {
 
+    #[provider_definition]
+    struct DummyProvider;
+
     #[resource_definition]
     struct DummyResourceA {
         id_a: i32,

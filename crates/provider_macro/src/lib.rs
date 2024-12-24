@@ -1,8 +1,9 @@
+mod definition;
 mod provider_attribute;
 mod provider_definition;
 mod resource_definition;
 
-use crate::provider_definition::ProviderDefinition;
+use crate::definition::Definition;
 use syn::{parse2, ItemMod};
 
 #[proc_macro_attribute]
@@ -17,7 +18,7 @@ pub fn provider(
         }
     };
 
-    let def = match ProviderDefinition::try_from(item_mod) {
+    let def = match Definition::try_from(item_mod) {
         Ok(def) => def,
         Err(err) => return err.to_compile_error().into(),
     };

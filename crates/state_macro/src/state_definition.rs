@@ -14,7 +14,7 @@ pub(crate) struct StateDefintion {
 impl StateDefintion {
     pub(crate) fn expand(self) -> proc_macro2::TokenStream {
         let resource_instantiation = self.resources.iter().map(|r| r.expand_instantiation());
-        let resource_name = self.resources.iter().map(|r| r.expand_name());
+        let _resource_name = self.resources.iter().map(|r| r.expand_name());
 
         quote! {
             struct State;

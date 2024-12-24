@@ -1,69 +1,38 @@
-use helpers::get_item_attribute;
-use quote::quote;
-use syn::{spanned::Spanned, Ident, ItemMod};
+use quote::{quote, ToTokens};
+use syn::{spanned::Spanned, token::Pub, Item, ItemStruct, Visibility};
 
-use crate::{provider_attribute::ProviderAttribute, resource_definition::ResourceDef};
-
-// this should spit out :
-//  mod::provider {
-//      use resourceA...
-//
-//      struct Provider;
-//      impl Provider {}
-// }
-
-pub(crate) struct ProviderDefinition {
-    ident: Ident,
-    resource_defs: Vec<ResourceDef>,
+pub(crate) struct ProviderDef {
+    item_struct: ItemStruct,
 }
 
-impl ProviderDefinition {
+impl ProviderDef {
+    pub(crate) fn try_from(item: Item) -> syn::Result<Self> {
+        let span = item.span();
+        let mut item_struct = if let Item::Struct(item) = item {
+            item
+        } else {
+            return Err(syn::Error::new(
+                item.span(),
+                "Invalid provider definition, expected struct item",
+            ));
+        };
+
+        item_struct.attrs = vec![];
+        item_struct.vis = Visibility::Public(Pub(span));
+        item_struct
+            .fields
+            .iter_mut()
+            .for_each(|f| f.vis = Visibility::Public(Pub(span)));
+
+        Ok(Self { item_struct })
+    }
+
     pub(crate) fn expand(self) -> proc_macro2::TokenStream {
-        let resource_defs = self.resource_defs.into_iter().map(|r| r.expand());
-        let mod_name = self.ident;
+        let item_struct = self.item_struct.to_token_stream();
 
         quote! {
-            pub mod #mod_name {
-                pub mod prelude {
-                    #(#resource_defs)*
-                }
-            }
+            #[allow(dead_code)]
+            #item_struct
         }
-    }
-}
-
-impl TryFrom<ItemMod> for ProviderDefinition {
-    type Error = syn::Error;
-
-    fn try_from(value: ItemMod) -> Result<Self, Self::Error> {
-        let item_span = value.span();
-        let ident = value.ident;
-
-        let items = value
-            .content
-            .ok_or_else(|| {
-                let msg = "Invalid state definition, expected mod to be inlined.";
-                syn::Error::new(item_span, msg)
-            })?
-            .1;
-
-        let mut resource_defs: Vec<ResourceDef> = Vec::new();
-
-        for item in items {
-            let provider_attribute: Option<ProviderAttribute> = get_item_attribute(&item)?;
-
-            match provider_attribute {
-                Some(ProviderAttribute::ResourceDefinition) => {
-                    let resrouce_def = ResourceDef::try_from(item)?;
-                    resource_defs.push(resrouce_def);
-                }
-                None => {}
-            }
-        }
-
-        Ok(Self {
-            ident,
-            resource_defs,
-        })
     }
 }

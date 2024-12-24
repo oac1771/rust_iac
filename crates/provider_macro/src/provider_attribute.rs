@@ -2,6 +2,7 @@ use syn::parse::{Parse, ParseStream};
 
 pub(crate) enum ProviderAttribute {
     ResourceDefinition,
+    ProviderDefintion,
 }
 
 impl Parse for ProviderAttribute {
@@ -10,20 +11,22 @@ impl Parse for ProviderAttribute {
         let content;
         syn::bracketed!(content in input);
 
-        let lookahead = content.lookahead1();
-
-        if lookahead.peek(keyword::resource_definition) {
+        if content.peek(keyword::resource_definition) {
             content.parse::<keyword::resource_definition>()?;
 
             Ok(Self::ResourceDefinition)
+        } else if content.peek(keyword::provider_definition) {
+            content.parse::<keyword::provider_definition>()?;
+            Ok(Self::ProviderDefintion)
         } else {
-            Err(lookahead.error())
+            Err(content.error("Expected keyword not found"))
         }
     }
 }
 
 mod keyword {
     syn::custom_keyword!(resource_definition);
+    syn::custom_keyword!(provider_definition);
 }
 
 #[cfg(test)]
