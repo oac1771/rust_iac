@@ -24,9 +24,9 @@ impl StateDefintion {
                 fn plan() {
                     #(
                         #resource_instantiation
-                        // println!(">>> {:?}", #resource_name);
                     )*
                 }
+
             }
 
         }

@@ -17,13 +17,17 @@ pub(crate) struct Definition {
 impl Definition {
     pub(crate) fn expand(self) -> proc_macro2::TokenStream {
         let resource_def = self.resource_defs.into_iter().map(|r| r.expand());
-        let provider_def = self.provider_def.expand();
+        let provider_struct = self.provider_def.expand_provider_struct();
+        let provider_trait = self.provider_def.expand_provider_trait();
+        let provider_trait_impl = self.provider_def.expand_provider_trait_impl();
         let mod_name = self.ident;
 
         quote! {
             pub mod #mod_name {
                 pub mod prelude {
-                    #provider_def
+                    #provider_struct
+                    #provider_trait
+                    #provider_trait_impl
                     #(#resource_def)*
                 }
             }

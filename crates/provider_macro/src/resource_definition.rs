@@ -24,6 +24,8 @@ impl ResourceDef {
             .iter_mut()
             .for_each(|f| f.vis = Visibility::Public(Pub(span)));
 
+        // instantiate resource trait
+
         Ok(Self { item_struct })
     }
 

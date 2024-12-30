@@ -27,7 +27,21 @@ impl ProviderDef {
         Ok(Self { item_struct })
     }
 
-    pub(crate) fn expand(self) -> proc_macro2::TokenStream {
+    pub(crate) fn expand_provider_trait(&self) -> proc_macro2::TokenStream {
+        quote! {
+            trait Provider {}
+        }
+    }
+
+    pub(crate) fn expand_provider_trait_impl(&self) -> proc_macro2::TokenStream {
+        let provider_ident = self.item_struct.ident.clone();
+
+        quote! {
+            impl Provider for #provider_ident {}
+        }
+    }
+
+    pub(crate) fn expand_provider_struct(&self) -> proc_macro2::TokenStream {
         let item_struct = self.item_struct.to_token_stream();
 
         quote! {
