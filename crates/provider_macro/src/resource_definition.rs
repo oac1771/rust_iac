@@ -24,12 +24,10 @@ impl ResourceDef {
             .iter_mut()
             .for_each(|f| f.vis = Visibility::Public(Pub(span)));
 
-        // instantiate resource trait
-
         Ok(Self { item_struct })
     }
 
-    pub(crate) fn expand(self) -> proc_macro2::TokenStream {
+    pub(crate) fn expand_resource_struct(self) -> proc_macro2::TokenStream {
         let item_struct = self.item_struct.to_token_stream();
 
         quote! {
