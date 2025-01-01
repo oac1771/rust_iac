@@ -9,6 +9,7 @@ impl ItemAttrs for Item {
     fn item_attrs(&self) -> Option<&Vec<Attribute>> {
         match self {
             Self::Struct(item) => Some(&item.attrs),
+            Self::Impl(item) => Some(&item.attrs),
             _ => None,
         }
     }

@@ -27,12 +27,20 @@ impl ResourceDef {
         Ok(Self { item_struct })
     }
 
-    pub(crate) fn expand_resource_struct(self) -> proc_macro2::TokenStream {
+    pub(crate) fn expand_resource_struct(&self) -> proc_macro2::TokenStream {
         let item_struct = self.item_struct.to_token_stream();
 
         quote! {
             #[allow(dead_code)]
             #item_struct
+        }
+    }
+
+    pub(crate) fn expand_resource_trait() -> proc_macro2::TokenStream {
+        quote! {
+            trait Resource {
+                fn foo() -> String;
+            }
         }
     }
 }

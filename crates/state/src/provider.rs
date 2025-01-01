@@ -11,8 +11,22 @@ mod dummy_provider {
         id_a: i32,
     }
 
+    #[resource_implementation]
+    impl Resource for DummyResourceA {
+        fn foo() -> String {
+            "DummyResourceA".to_string()
+        }
+    }
+
     #[resource_definition]
     struct DummyResourceB {
         id_b: i32,
+    }
+
+    #[resource_implementation]
+    impl Resource for DummyResourceB {
+        fn foo() -> String {
+            "DummyResourceB".to_string()
+        }
     }
 }

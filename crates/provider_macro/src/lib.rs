@@ -2,6 +2,7 @@ mod definition;
 mod provider_attribute;
 mod provider_definition;
 mod resource_definition;
+mod resource_implementation;
 
 use crate::definition::Definition;
 use syn::{parse2, ItemMod};
