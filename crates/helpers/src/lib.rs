@@ -1,4 +1,4 @@
-use quote::ToTokens;
+use quote::{quote, ToTokens};
 use syn::{parse::Parse, parse2, Attribute, Item};
 
 pub trait ItemAttrs {
@@ -23,5 +23,11 @@ where
         Ok(Some(parse2(attr.into_token_stream())?))
     } else {
         Ok(None)
+    }
+}
+
+pub fn resource_trait_name() -> proc_macro2::TokenStream {
+    quote! {
+        Resource
     }
 }

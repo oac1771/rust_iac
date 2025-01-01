@@ -49,6 +49,15 @@ mod test {
     }
 
     #[test]
+    fn test_resource_provider_attribute_parses_provider_def_correctly() {
+        let input = quote! {
+            #[provider_definition]
+        };
+
+        let _result: ProviderAttribute = parse2(input).unwrap();
+    }
+
+    #[test]
     fn test_resource_provider_attribute_parses_resource_impl_correctly() {
         let input = quote! {
             #[resource_implementation]

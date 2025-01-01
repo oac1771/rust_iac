@@ -37,9 +37,10 @@ impl ResourceDef {
     }
 
     pub(crate) fn expand_resource_trait() -> proc_macro2::TokenStream {
+        let resource_trait_name = helpers::resource_trait_name();
         quote! {
-            trait Resource {
-                fn foo() -> String;
+            pub trait #resource_trait_name {
+                fn foo(&self) -> String;
             }
         }
     }

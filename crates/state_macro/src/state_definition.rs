@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use helpers::get_item_attribute;
+use helpers::{get_item_attribute, resource_trait_name};
 use proc_macro2::Span;
 use quote::quote;
 use syn::Ident;
@@ -13,6 +13,7 @@ pub(crate) struct StateDefintion {
 
 impl StateDefintion {
     pub(crate) fn expand(self) -> proc_macro2::TokenStream {
+        let resource_trait_name = resource_trait_name();
         let resource_instantiation = self.resources.iter().map(|r| r.expand_instantiation());
         let _resource_name = self.resources.iter().map(|r| r.expand_name());
 
@@ -21,7 +22,8 @@ impl StateDefintion {
 
             impl State {
                 #[allow(unused_variables)]
-                fn plan() {
+                fn new() {
+                    let mut resources: Vec<Box<dyn #resource_trait_name>> = Vec::new();
                     #(
                         #resource_instantiation
                     )*

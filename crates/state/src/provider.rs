@@ -13,7 +13,7 @@ mod dummy_provider {
 
     #[resource_implementation]
     impl Resource for DummyResourceA {
-        fn foo() -> String {
+        fn foo(&self) -> String {
             "DummyResourceA".to_string()
         }
     }
@@ -25,7 +25,7 @@ mod dummy_provider {
 
     #[resource_implementation]
     impl Resource for DummyResourceB {
-        fn foo() -> String {
+        fn foo(&self) -> String {
             "DummyResourceB".to_string()
         }
     }
