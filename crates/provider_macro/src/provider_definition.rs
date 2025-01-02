@@ -38,10 +38,13 @@ impl ProviderDef {
 
     pub(crate) fn expand_provider_trait() -> proc_macro2::TokenStream {
         let provider_trait_name = helpers::provider_trait_name();
+        let resource_trait_name = helpers::resource_trait_name();
 
         quote! {
             pub trait #provider_trait_name {
-                fn get(&self);
+                const url: &'static str;
+
+                fn get<R: #resource_trait_name>(&self, resource: R) -> R::Response;
             }
         }
     }
