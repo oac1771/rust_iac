@@ -13,7 +13,7 @@ pub(crate) struct StateDefintion {
 
 impl StateDefintion {
     pub(crate) fn expand(self) -> proc_macro2::TokenStream {
-        let resource_trait_name = resource_trait_name();
+        let _resource_trait_name = resource_trait_name();
         let resource_instantiation = self.resources.iter().map(|r| r.expand_instantiation());
         let _resource_name = self.resources.iter().map(|r| r.expand_name());
 
@@ -22,8 +22,7 @@ impl StateDefintion {
 
             impl State {
                 #[allow(unused_variables)]
-                fn new() {
-                    let mut resources: Vec<Box<dyn #resource_trait_name>> = Vec::new();
+                fn plan() {
                     #(
                         #resource_instantiation
                     )*

@@ -1,6 +1,7 @@
+mod attribute;
 mod definition;
-mod provider_attribute;
 mod provider_definition;
+mod provider_implementation;
 mod resource_definition;
 mod resource_implementation;
 

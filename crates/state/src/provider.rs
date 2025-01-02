@@ -6,6 +6,11 @@ mod dummy_provider {
     #[provider_definition]
     struct DummyProvider;
 
+    #[provider_implementation]
+    impl Provider for DummyProvider {
+        fn get(&self) {}
+    }
+
     #[resource_definition]
     struct DummyResourceA {
         id_a: i32,

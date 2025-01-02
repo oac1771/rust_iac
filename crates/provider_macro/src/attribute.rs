@@ -1,12 +1,13 @@
 use syn::parse::{Parse, ParseStream};
 
-pub(crate) enum ProviderAttribute {
+pub(crate) enum Attribute {
     ResourceDefinition,
     ResourceImplementation,
     ProviderDefintion,
+    ProviderImplementation,
 }
 
-impl Parse for ProviderAttribute {
+impl Parse for Attribute {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         input.parse::<syn::Token![#]>()?;
         let content;
@@ -21,6 +22,9 @@ impl Parse for ProviderAttribute {
         } else if content.peek(keyword::resource_implementation) {
             content.parse::<keyword::resource_implementation>()?;
             Ok(Self::ResourceImplementation)
+        } else if content.peek(keyword::provider_implementation) {
+            content.parse::<keyword::provider_implementation>()?;
+            Ok(Self::ProviderImplementation)
         } else {
             Err(content.error("Expected keyword not found"))
         }
@@ -31,6 +35,7 @@ mod keyword {
     syn::custom_keyword!(resource_definition);
     syn::custom_keyword!(resource_implementation);
     syn::custom_keyword!(provider_definition);
+    syn::custom_keyword!(provider_implementation);
 }
 
 #[cfg(test)]
@@ -45,7 +50,7 @@ mod test {
             #[resource_definition]
         };
 
-        let _result: ProviderAttribute = parse2(input).unwrap();
+        let _result: Attribute = parse2(input).unwrap();
     }
 
     #[test]
@@ -54,7 +59,7 @@ mod test {
             #[provider_definition]
         };
 
-        let _result: ProviderAttribute = parse2(input).unwrap();
+        let _result: Attribute = parse2(input).unwrap();
     }
 
     #[test]
@@ -63,6 +68,15 @@ mod test {
             #[resource_implementation]
         };
 
-        let _result: ProviderAttribute = parse2(input).unwrap();
+        let _result: Attribute = parse2(input).unwrap();
+    }
+
+    #[test]
+    fn test_resource_provider_attribute_parses_provider_impl_correctly() {
+        let input = quote! {
+            #[provider_implementation]
+        };
+
+        let _result: Attribute = parse2(input).unwrap();
     }
 }

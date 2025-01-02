@@ -4,7 +4,7 @@ use quote::quote;
 use syn::{spanned::Spanned, Ident, ItemMod};
 
 use crate::{
-    provider_attribute::ProviderAttribute, provider_definition::ProviderDef,
+    attribute::Attribute, provider_definition::ProviderDef, provider_implementation::ProviderImpl,
     resource_definition::ResourceDef, resource_implementation::ResourceImpl,
 };
 
@@ -13,6 +13,7 @@ pub(crate) struct Definition {
     resource_defs: Vec<ResourceDef>,
     resource_impls: Vec<ResourceImpl>,
     provider_def: ProviderDef,
+    provider_impl: ProviderImpl,
 }
 
 impl Definition {
@@ -25,16 +26,17 @@ impl Definition {
             .map(|r| r.expand_resource_struct());
         let resource_impl = self.resource_impls.iter().map(|r_impl| r_impl.expand());
         let resource_trait = ResourceDef::expand_resource_trait();
-        let provider_struct = self.provider_def.expand_provider_struct();
-        let provider_trait = self.provider_def.expand_provider_trait();
-        let provider_trait_impl = self.provider_def.expand_provider_trait_impl();
+
+        let provider_def = self.provider_def.expand_provider_struct();
+        let provider_impl = self.provider_impl.expand();
+        let provider_trait = ProviderDef::expand_provider_trait();
 
         quote! {
             pub mod #mod_name {
                 pub mod prelude {
-                    #provider_struct
+                    #provider_def
                     #provider_trait
-                    #provider_trait_impl
+                    #provider_impl
 
                     #resource_trait
                     #(#resource_def)*
@@ -63,21 +65,25 @@ impl TryFrom<ItemMod> for Definition {
         let mut resource_defs: Vec<ResourceDef> = Vec::new();
         let mut resource_impls: Vec<ResourceImpl> = Vec::new();
         let mut provider_def: Option<ProviderDef> = None;
+        let mut provider_impl: Option<ProviderImpl> = None;
 
         for item in items {
-            let provider_attribute: Option<ProviderAttribute> = get_item_attribute(&item)?;
+            let provider_attribute: Option<Attribute> = get_item_attribute(&item)?;
 
             match provider_attribute {
-                Some(ProviderAttribute::ResourceDefinition) => {
+                Some(Attribute::ResourceDefinition) => {
                     let resrouce_def = ResourceDef::try_from(item)?;
                     resource_defs.push(resrouce_def);
                 }
-                Some(ProviderAttribute::ResourceImplementation) => {
+                Some(Attribute::ResourceImplementation) => {
                     let resource_impl = ResourceImpl::try_from(item)?;
                     resource_impls.push(resource_impl);
                 }
-                Some(ProviderAttribute::ProviderDefintion) => {
+                Some(Attribute::ProviderDefintion) => {
                     provider_def = Some(ProviderDef::try_from(item)?)
+                }
+                Some(Attribute::ProviderImplementation) => {
+                    provider_impl = Some(ProviderImpl::try_from(item)?)
                 }
                 None => {}
             }
@@ -90,11 +96,19 @@ impl TryFrom<ItemMod> for Definition {
             ));
         };
 
+        let Some(provider_impl) = provider_impl else {
+            return Err(syn::Error::new(
+                Span::call_site(),
+                "Provider implementation not specified",
+            ));
+        };
+
         Ok(Self {
             ident,
             resource_defs,
             resource_impls,
             provider_def,
+            provider_impl,
         })
     }
 }

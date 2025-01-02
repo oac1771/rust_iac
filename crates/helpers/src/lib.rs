@@ -31,3 +31,9 @@ pub fn resource_trait_name() -> proc_macro2::TokenStream {
         Resource
     }
 }
+
+pub fn provider_trait_name() -> proc_macro2::TokenStream {
+    quote! {
+        Provider
+    }
+}
