@@ -44,7 +44,7 @@ impl ProviderDef {
             pub trait #provider_trait_name {
                 const url: &'static str;
 
-                fn get<R: #resource_trait_name>(&self, resource: R) -> R::Response;
+                fn get<R: #resource_trait_name>(&self, resource: &R) -> R::Response;
             }
         }
     }

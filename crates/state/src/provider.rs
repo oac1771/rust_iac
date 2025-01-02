@@ -10,7 +10,7 @@ mod dummy_provider {
     impl Provider for DummyProvider {
         const url: &'static str = "http://foo.com";
 
-        fn get<R: Resource>(&self, resource: R) -> R::Response {
+        fn get<R: Resource>(&self, resource: &R) -> R::Response {
             resource.payload()
         }
     }
