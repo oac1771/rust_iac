@@ -1,0 +1,3 @@
+create getters for output entries
+
+make inner fields private and use getters instead

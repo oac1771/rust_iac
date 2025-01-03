@@ -1,14 +1,11 @@
 use syn::{
     parse::{Parse, ParseStream},
-    punctuated::Punctuated,
-    token::{self, Comma},
-    FieldValue, Token,
+    token::Paren,
+    Field, Token,
 };
 
 pub(crate) enum Attribute {
-    ResourceDefinition {
-        outputs: Option<Punctuated<FieldValue, Comma>>,
-    },
+    ResourceDefinition { output_fields: Vec<Field> },
     ResourceImplementation,
     ProviderDefintion,
     ProviderImplementation,
@@ -20,12 +17,12 @@ impl Parse for Attribute {
         let content;
         syn::bracketed!(content in input);
 
-        let mut outputs: Option<Punctuated<FieldValue, Comma>> = None;
-
         if content.peek(keyword::resource_definition) {
             content.parse::<keyword::resource_definition>()?;
 
-            if content.peek(token::Paren) {
+            let mut output_fields: Vec<Field> = Vec::new();
+
+            if content.peek(Paren) {
                 let resource_def_content;
                 syn::parenthesized!(resource_def_content in content);
                 resource_def_content.parse::<keyword::outputs>()?;
@@ -34,12 +31,12 @@ impl Parse for Attribute {
                 let outputs_content;
                 syn::braced!(outputs_content in resource_def_content);
 
-                outputs = Some(Punctuated::<FieldValue, Token![,]>::parse_terminated(
-                    &outputs_content,
-                )?);
+                while !outputs_content.is_empty() {
+                    output_fields.push(Field::parse_named(&outputs_content)?);
+                }
             }
 
-            Ok(Self::ResourceDefinition { outputs })
+            Ok(Self::ResourceDefinition { output_fields })
         } else if content.peek(keyword::provider_definition) {
             content.parse::<keyword::provider_definition>()?;
             Ok(Self::ProviderDefintion)
@@ -84,7 +81,13 @@ mod test {
             #[resource_definition(outputs = {foo: String})]
         };
 
-        let _result: Attribute = parse2(input).unwrap();
+        let result: Attribute = parse2(input).unwrap();
+
+        if let Attribute::ResourceDefinition { output_fields } = result {
+            assert_eq!(output_fields.len(), 1);
+        } else {
+            panic!("parsed to incorrect attribute");
+        }
     }
 
     #[test]
