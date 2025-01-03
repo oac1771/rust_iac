@@ -1,6 +1,11 @@
 [workspace]
 resolver = "2"
-members = [ "crates/helpers", "crates/provider_macro", "crates/state","crates/state_macro"]
+members = [ 
+    "crates/helpers", 
+    "crates/provider_macro", 
+    # "crates/state",
+    "crates/state_macro"
+]
 
 [workspace.dependencies]
 quote = "1.0"
