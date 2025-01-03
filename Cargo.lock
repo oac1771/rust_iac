@@ -53,7 +53,6 @@ version = "0.1.0"
 dependencies = [
  "helpers",
  "proc-macro2",
- "provider_macro",
  "quote",
  "syn",
 ]

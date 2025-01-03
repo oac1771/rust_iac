@@ -40,8 +40,9 @@ impl ResourceDef {
         let resource_trait_name = helpers::resource_trait_name();
         quote! {
             pub trait #resource_trait_name {
-                type Response;
-                fn payload(&self) -> Self::Response;
+                type Payload;
+
+                fn payload(&self) -> Self::Payload;
             }
         }
     }

@@ -8,7 +8,6 @@ quote = { workspace = true }
 proc-macro2 = { workspace = true }
 syn = { workspace = true, features = ["full"] }
 helpers = { path = "../helpers" }
-provider_macro = { path = "../provider_macro" }
 
 [lib]
 proc-macro = true

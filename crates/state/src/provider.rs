@@ -10,7 +10,7 @@ mod dummy_provider {
     impl Provider for DummyProvider {
         const url: &'static str = "http://foo.com";
 
-        fn get<R: Resource>(&self, resource: &R) -> R::Response {
+        fn get<R: Resource>(&self, resource: &R) -> R::Payload {
             resource.payload()
         }
     }
@@ -22,9 +22,9 @@ mod dummy_provider {
 
     #[resource_implementation]
     impl Resource for DummyResourceA {
-        type Response = String;
+        type Payload = String;
 
-        fn payload(&self) -> Self::Response {
+        fn payload(&self) -> Self::Payload {
             "DummyResourceA".to_string()
         }
     }
@@ -36,9 +36,9 @@ mod dummy_provider {
 
     #[resource_implementation]
     impl Resource for DummyResourceB {
-        type Response = String;
+        type Payload = String;
 
-        fn payload(&self) -> Self::Response {
+        fn payload(&self) -> Self::Payload {
             "DummyResourceB".to_string()
         }
     }
