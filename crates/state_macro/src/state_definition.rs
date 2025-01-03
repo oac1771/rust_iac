@@ -122,7 +122,7 @@ impl StateDefintion {
 
             let result = resources
                 .iter()
-                .find(|r| r.name().as_str() == &dep)
+                .find(|r| r.name().as_str() == dep)
                 .ok_or_else(|| {
                     syn::Error::new(
                         Span::call_site(),

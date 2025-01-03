@@ -1,12 +1,21 @@
 use quote::{quote, ToTokens};
-use syn::{spanned::Spanned, token::Pub, Item, ItemStruct, Visibility};
+use syn::{
+    punctuated::Punctuated,
+    spanned::Spanned,
+    token::{Comma, Pub},
+    FieldValue, Item, ItemStruct, Visibility,
+};
 
 pub(crate) struct ResourceDef {
     item_struct: ItemStruct,
+    outputs: Punctuated<FieldValue, Comma>,
 }
 
 impl ResourceDef {
-    pub(crate) fn try_from(item: Item) -> syn::Result<Self> {
+    pub(crate) fn try_from(
+        item: Item,
+        outputs: Option<Punctuated<FieldValue, Comma>>,
+    ) -> syn::Result<Self> {
         let span = item.span();
         let mut item_struct = if let Item::Struct(item) = item {
             item
@@ -24,7 +33,15 @@ impl ResourceDef {
             .iter_mut()
             .for_each(|f| f.vis = Visibility::Public(Pub(span)));
 
-        Ok(Self { item_struct })
+        let outputs = match outputs {
+            Some(o) => o,
+            None => Punctuated::new(),
+        };
+
+        Ok(Self {
+            item_struct,
+            outputs,
+        })
     }
 
     pub(crate) fn expand_resource_struct(&self) -> proc_macro2::TokenStream {

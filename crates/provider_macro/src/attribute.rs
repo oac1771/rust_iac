@@ -1,11 +1,14 @@
 use syn::{
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
-    token, FieldValue, Token,
+    token::{self, Comma},
+    FieldValue, Token,
 };
 
 pub(crate) enum Attribute {
-    ResourceDefinition,
+    ResourceDefinition {
+        outputs: Option<Punctuated<FieldValue, Comma>>,
+    },
     ResourceImplementation,
     ProviderDefintion,
     ProviderImplementation,
@@ -16,6 +19,8 @@ impl Parse for Attribute {
         input.parse::<Token![#]>()?;
         let content;
         syn::bracketed!(content in input);
+
+        let mut outputs: Option<Punctuated<FieldValue, Comma>> = None;
 
         if content.peek(keyword::resource_definition) {
             content.parse::<keyword::resource_definition>()?;
@@ -29,11 +34,12 @@ impl Parse for Attribute {
                 let outputs_content;
                 syn::braced!(outputs_content in resource_def_content);
 
-                let fields =
-                    Punctuated::<FieldValue, Token![,]>::parse_terminated(&outputs_content)?;
+                outputs = Some(Punctuated::<FieldValue, Token![,]>::parse_terminated(
+                    &outputs_content,
+                )?);
             }
 
-            Ok(Self::ResourceDefinition)
+            Ok(Self::ResourceDefinition { outputs })
         } else if content.peek(keyword::provider_definition) {
             content.parse::<keyword::provider_definition>()?;
             Ok(Self::ProviderDefintion)

@@ -71,8 +71,8 @@ impl TryFrom<ItemMod> for Definition {
             let provider_attribute: Option<Attribute> = get_item_attribute(&item)?;
 
             match provider_attribute {
-                Some(Attribute::ResourceDefinition) => {
-                    let resrouce_def = ResourceDef::try_from(item)?;
+                Some(Attribute::ResourceDefinition { outputs }) => {
+                    let resrouce_def = ResourceDef::try_from(item, outputs)?;
                     resource_defs.push(resrouce_def);
                 }
                 Some(Attribute::ResourceImplementation) => {
