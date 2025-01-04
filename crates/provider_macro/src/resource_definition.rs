@@ -1,5 +1,8 @@
 use quote::{format_ident, quote, ToTokens};
-use syn::{spanned::Spanned, token::Pub, Field, Fields, Item, ItemStruct, PatType, Visibility};
+use syn::{
+    spanned::Spanned, token::Pub, Field, Fields, Item, ItemStruct, Pat, PatIdent, PatType, Token,
+    Visibility,
+};
 
 const OUTPUT_IDENTIFIER: &str = "__output";
 
@@ -22,6 +25,8 @@ impl ResourceDef {
 
         if let Fields::Named(ref mut named_fields) = item_struct.fields {
             outputs.iter_mut().for_each(|p| {
+                println!(">> {:?}", p.pat.to_token_stream());
+
                 let ident = format_ident!(
                     "{}_{}",
                     OUTPUT_IDENTIFIER,
@@ -70,16 +75,59 @@ impl ResourceDef {
             })
             .map(|f| f.ident.to_token_stream());
 
+        let non_output_field_name = self
+            .item_struct
+            .fields
+            .iter()
+            .filter(|f| {
+                if let Some(ident) = &f.ident {
+                    !ident.to_string().starts_with(OUTPUT_IDENTIFIER)
+                } else {
+                    false
+                }
+            })
+            .map(|f| f.ident.to_token_stream());
+
+        let non_output_pat = self
+            .item_struct
+            .fields
+            .iter()
+            .filter(|f| {
+                if let Some(ident) = &f.ident {
+                    !ident.to_string().starts_with(OUTPUT_IDENTIFIER)
+                } else {
+                    false
+                }
+            })
+            .map(|f| {
+                let ident = f.ident.clone().unwrap();
+                let pat_ident = PatIdent {
+                    attrs: Vec::new(),
+                    by_ref: None,
+                    mutability: None,
+                    ident,
+                    subpat: None,
+                };
+
+                PatType {
+                    attrs: Vec::new(),
+                    pat: Box::new(Pat::Ident(pat_ident)),
+                    colon_token: Token![:](f.ty.span()),
+                    ty: Box::new(f.ty.clone()),
+                }
+            });
+
         quote! {
             #[allow(dead_code)]
             #item_struct
 
             impl #item_struct_name {
                 pub fn new(
-
+                    #(#non_output_pat)*
                 ) -> Self {
                     Self {
-                        #(#output_field_name: Default::default())*
+                        #(#non_output_field_name,)*
+                        #(#output_field_name: Default::default(),)*
                     }
                 }
             }
