@@ -40,6 +40,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "state"
+version = "0.1.0"
+dependencies = [
+ "provider_macro",
+ "state_macro",
+]
+
+[[package]]
 name = "state_macro"
 version = "0.1.0"
 dependencies = [

@@ -22,7 +22,7 @@ impl Definition {
 
         let resource_def = self
             .resource_defs
-            .iter()
+            .into_iter()
             .map(|r| r.expand_resource_struct());
         let resource_impl = self.resource_impls.iter().map(|r_impl| r_impl.expand());
         let resource_trait = ResourceDef::expand_resource_trait();

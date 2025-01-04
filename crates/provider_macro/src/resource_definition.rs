@@ -59,63 +59,38 @@ impl ResourceDef {
         })
     }
 
-    pub(crate) fn expand_resource_struct(&self) -> proc_macro2::TokenStream {
+    pub(crate) fn expand_resource_struct(self) -> proc_macro2::TokenStream {
         let item_struct = self.item_struct.to_token_stream();
         let item_struct_name = self.item_struct.ident.to_token_stream();
-        let output_field_name = self
-            .item_struct
-            .fields
-            .iter()
-            .filter(|f| {
+
+        let (output_field, non_output_field): (Vec<Field>, Vec<Field>) =
+            self.item_struct.fields.into_iter().partition(|f| {
                 if let Some(ident) = &f.ident {
                     ident.to_string().starts_with(OUTPUT_IDENTIFIER)
                 } else {
                     false
                 }
-            })
-            .map(|f| f.ident.to_token_stream());
-
-        let non_output_field_name = self
-            .item_struct
-            .fields
-            .iter()
-            .filter(|f| {
-                if let Some(ident) = &f.ident {
-                    !ident.to_string().starts_with(OUTPUT_IDENTIFIER)
-                } else {
-                    false
-                }
-            })
-            .map(|f| f.ident.to_token_stream());
-
-        let non_output_pat = self
-            .item_struct
-            .fields
-            .iter()
-            .filter(|f| {
-                if let Some(ident) = &f.ident {
-                    !ident.to_string().starts_with(OUTPUT_IDENTIFIER)
-                } else {
-                    false
-                }
-            })
-            .map(|f| {
-                let ident = f.ident.clone().unwrap();
-                let pat_ident = PatIdent {
-                    attrs: Vec::new(),
-                    by_ref: None,
-                    mutability: None,
-                    ident,
-                    subpat: None,
-                };
-
-                PatType {
-                    attrs: Vec::new(),
-                    pat: Box::new(Pat::Ident(pat_ident)),
-                    colon_token: Token![:](f.ty.span()),
-                    ty: Box::new(f.ty.clone()),
-                }
             });
+
+        let output_field_name = output_field.iter().map(|f| f.ident.to_token_stream());
+        let non_output_field_name = non_output_field.iter().map(|f| f.ident.to_token_stream());
+        let non_output_pat = non_output_field.iter().map(|f| {
+            let ident = f.ident.clone().unwrap();
+            let pat_ident = PatIdent {
+                attrs: Vec::new(),
+                by_ref: None,
+                mutability: None,
+                ident,
+                subpat: None,
+            };
+
+            PatType {
+                attrs: Vec::new(),
+                pat: Box::new(Pat::Ident(pat_ident)),
+                colon_token: Token![:](f.ty.span()),
+                ty: Box::new(f.ty.clone()),
+            }
+        });
 
         quote! {
             #[allow(dead_code)]
