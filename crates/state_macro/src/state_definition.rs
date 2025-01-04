@@ -176,14 +176,14 @@ mod test {
         let resource_name_3 = Ident::new("resource_3", Span::call_site());
 
         let stream = quote! {
+                #[resource(name = #resource_name_2)]
+                #resource {field_1: #resource_name_1.field_1()};
+
                 #[resource(name = #resource_name_1)]
                 #resource {field_1: 10};
 
-                #[resource(name = #resource_name_2)]
-                #resource {field_1: #resource_name_1.field_1};
-
                 #[resource(name = #resource_name_3)]
-                #resource {field_1: #resource_name_2.field_1};
+                #resource {field_1: #resource_name_2.field_1()};
         };
 
         let item_state = parse2::<ItemState>(stream).unwrap();
@@ -203,10 +203,10 @@ mod test {
 
         let stream = quote! {
                 #[resource(name = #resource_name_1)]
-                #resource {field_1: #resource_name_2.field_1};
+                #resource {field_1: #resource_name_2.field_1()};
 
                 #[resource(name = #resource_name_2)]
-                #resource {field_1: #resource_name_1.field_1};
+                #resource {field_1: #resource_name_1.field_1()};
 
         };
 

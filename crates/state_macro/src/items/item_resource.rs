@@ -21,8 +21,8 @@ impl ItemResource {
             .fields
             .iter()
             .filter_map(|f| {
-                if let Expr::Field(expr_field) = &f.expr {
-                    let field_value = expr_field.to_token_stream().to_string();
+                if let Expr::MethodCall(exprt_method_call) = &f.expr {
+                    let field_value = exprt_method_call.to_token_stream().to_string();
 
                     let mut dependency = field_value.split('.').map(|f| {
                         let f = f.trim();
@@ -115,7 +115,7 @@ mod test {
 
         let stream = quote! {
             #[foo(bar = zap)]
-            Foo {field_1: #val.field_1};
+            Foo {field_1: #val.field_1()};
         };
 
         let resource = parse2::<ItemResource>(stream).unwrap();
@@ -145,8 +145,8 @@ mod test {
         let stream = quote! {
             #[foo(bar = zap)]
             Foo {
-                field_1: #val_1.field_1,
-                field_2: #val_2.field_1,
+                field_1: #val_1.field_1(),
+                field_2: #val_2.field_1(),
                 field_3: 10,
             };
         };
