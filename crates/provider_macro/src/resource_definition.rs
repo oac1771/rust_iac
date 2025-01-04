@@ -1,14 +1,13 @@
 use quote::{format_ident, quote, ToTokens};
 use syn::{
-    spanned::Spanned, token::Pub, Field, Fields, Item, ItemStruct, Pat, PatIdent, PatType, Token,
-    Visibility,
+    spanned::Spanned, token::Pub, Field, Fields, Ident, Item, ItemStruct, Pat, PatIdent, PatType,
+    Token, Visibility,
 };
 
 const OUTPUT_IDENTIFIER: &str = "__output";
 
 pub(crate) struct ResourceDef {
     item_struct: ItemStruct,
-    outputs: Vec<PatType>,
 }
 
 impl ResourceDef {
@@ -25,8 +24,6 @@ impl ResourceDef {
 
         if let Fields::Named(ref mut named_fields) = item_struct.fields {
             outputs.iter_mut().for_each(|p| {
-                println!(">> {:?}", p.pat.to_token_stream());
-
                 let ident = format_ident!(
                     "{}_{}",
                     OUTPUT_IDENTIFIER,
@@ -48,20 +45,13 @@ impl ResourceDef {
 
         item_struct.attrs = vec![];
         item_struct.vis = Visibility::Public(Pub(span));
-        item_struct
-            .fields
-            .iter_mut()
-            .for_each(|f| f.vis = Visibility::Public(Pub(span)));
 
-        Ok(Self {
-            item_struct,
-            outputs,
-        })
+        Ok(Self { item_struct })
     }
 
     pub(crate) fn expand_resource_struct(self) -> proc_macro2::TokenStream {
-        let item_struct = self.item_struct.to_token_stream();
         let item_struct_name = self.item_struct.ident.to_token_stream();
+        let item_struct = self.item_struct.to_token_stream();
 
         let (output_field, non_output_field): (Vec<Field>, Vec<Field>) =
             self.item_struct.fields.into_iter().partition(|f| {
@@ -72,8 +62,8 @@ impl ResourceDef {
                 }
             });
 
-        let output_field_name = output_field.iter().map(|f| f.ident.to_token_stream());
-        let non_output_field_name = non_output_field.iter().map(|f| f.ident.to_token_stream());
+        let output_field_name = output_field.iter().filter_map(|f| f.ident.clone());
+        let non_output_field_name = non_output_field.iter().filter_map(|f| f.ident.clone());
         let non_output_pat = non_output_field.iter().map(|f| {
             let ident = f.ident.clone().unwrap();
             let pat_ident = PatIdent {
@@ -92,20 +82,53 @@ impl ResourceDef {
             }
         });
 
+        let new_fn = Self::expand_new_method(
+            non_output_pat,
+            non_output_field_name,
+            output_field_name.clone(),
+        );
+        let getter_fns = Self::expand_getters(output_field_name);
+
         quote! {
             #[allow(dead_code)]
             #item_struct
 
             impl #item_struct_name {
-                pub fn new(
-                    #(#non_output_pat)*
-                ) -> Self {
-                    Self {
-                        #(#non_output_field_name,)*
-                        #(#output_field_name: Default::default(),)*
-                    }
+                #new_fn
+                #getter_fns
+            }
+        }
+    }
+
+    fn expand_new_method<
+        P: Iterator<Item = PatType>,
+        NF: Iterator<Item = Ident>,
+        OF: Iterator<Item = Ident>,
+    >(
+        non_output_pat: P,
+        non_output_field_name: NF,
+        output_field_name: OF,
+    ) -> proc_macro2::TokenStream {
+        quote! {
+            pub fn new(
+                #(#non_output_pat)*
+            ) -> Self {
+                Self {
+                    #(#non_output_field_name,)*
+                    #(#output_field_name: Default::default(),)*
                 }
             }
+        }
+    }
+
+    fn expand_getters<OF: Iterator<Item = Ident>>(
+        output_field_name: OF,
+    ) -> proc_macro2::TokenStream {
+        let getter_name = output_field_name.map(|i| format_ident!("get_{}", i));
+        quote! {
+            #(
+                pub fn #getter_name(&self) {}
+            )*
         }
     }
 

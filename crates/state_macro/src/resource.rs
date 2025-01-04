@@ -21,12 +21,12 @@ impl Resource {
     pub(crate) fn expand_instantiation(&self) -> proc_macro2::TokenStream {
         let name = &self.name_val;
         let struct_name = &self.item_resource.ident;
-        let fields = self.item_resource.fields.iter();
+        let fields = self.item_resource.fields.iter().map(|f| f.expr.clone());
 
         quote! {
-            let #name: #struct_name = #struct_name {
-                #(#fields)*
-            };
+            let #name: #struct_name = #struct_name::new(
+                #(#fields,)*
+            );
         }
     }
 

@@ -5,7 +5,7 @@ state! {
 
     #[resource(name = zip)]
     DummyResourceB {
-        id_b: bar.id_a,
+        id_b: bar.id(),
     }
 
     #[resource(name = bar)]
