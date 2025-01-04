@@ -3,7 +3,7 @@ resolver = "2"
 members = [ 
     "crates/helpers", 
     "crates/provider_macro", 
-    # "crates/state",
+    "crates/state",
     "crates/state_macro"
 ]
 

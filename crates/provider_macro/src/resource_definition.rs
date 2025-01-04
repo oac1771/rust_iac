@@ -1,13 +1,15 @@
 use quote::{format_ident, quote, ToTokens};
-use syn::{spanned::Spanned, token::Pub, Field, Fields, Item, ItemStruct, Visibility};
+use syn::{spanned::Spanned, token::Pub, Field, Fields, Item, ItemStruct, PatType, Visibility};
+
+const OUTPUT_IDENTIFIER: &str = "__output";
 
 pub(crate) struct ResourceDef {
     item_struct: ItemStruct,
-    output_fields: Vec<Field>,
+    outputs: Vec<PatType>,
 }
 
 impl ResourceDef {
-    pub(crate) fn try_from(item: Item, output_fields: Vec<Field>) -> syn::Result<Self> {
+    pub(crate) fn try_from(item: Item, mut outputs: Vec<PatType>) -> syn::Result<Self> {
         let span = item.span();
         let mut item_struct = if let Item::Struct(item) = item {
             item
@@ -19,7 +21,24 @@ impl ResourceDef {
         };
 
         if let Fields::Named(ref mut named_fields) = item_struct.fields {
-            output_fields.iter().for_each(|f| named_fields.named.push_value(f.clone()));
+            outputs.iter_mut().for_each(|p| {
+                let ident = format_ident!(
+                    "{}_{}",
+                    OUTPUT_IDENTIFIER,
+                    p.pat.as_ref().to_token_stream().to_string()
+                );
+
+                let field = Field {
+                    attrs: Vec::new(),
+                    vis: Visibility::Inherited,
+                    mutability: syn::FieldMutability::None,
+                    ident: Some(ident),
+                    colon_token: Some(p.colon_token),
+                    ty: *p.ty.clone(),
+                };
+
+                named_fields.named.push_value(field);
+            });
         }
 
         item_struct.attrs = vec![];
@@ -31,30 +50,39 @@ impl ResourceDef {
 
         Ok(Self {
             item_struct,
-            output_fields,
+            outputs,
         })
     }
 
     pub(crate) fn expand_resource_struct(&self) -> proc_macro2::TokenStream {
         let item_struct = self.item_struct.to_token_stream();
         let item_struct_name = self.item_struct.ident.to_token_stream();
-
-        // let output_fn_name = self
-        //     .outputs
-        //     .iter()
-        //     .map(|f| format_ident!("get_{}", f.member));
-
-        // let output_fn_type = self.outputs.iter().map(|f| f.expr.to_token_stream());
+        let output_field_name = self
+            .item_struct
+            .fields
+            .iter()
+            .filter(|f| {
+                if let Some(ident) = &f.ident {
+                    ident.to_string().starts_with(OUTPUT_IDENTIFIER)
+                } else {
+                    false
+                }
+            })
+            .map(|f| f.ident.to_token_stream());
 
         quote! {
             #[allow(dead_code)]
             #item_struct
 
-            // impl #item_struct_name {
-            //     #(
-            //         pub fn #output_fn_name(&self) -> #output_fn_type {}
-            //     )*
-            // }
+            impl #item_struct_name {
+                pub fn new(
+
+                ) -> Self {
+                    Self {
+                        #(#output_field_name: Default::default())*
+                    }
+                }
+            }
         }
     }
 

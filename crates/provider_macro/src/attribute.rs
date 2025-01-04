@@ -1,11 +1,11 @@
 use syn::{
     parse::{Parse, ParseStream},
     token::Paren,
-    Field, Token,
+    PatType, Token,
 };
 
 pub(crate) enum Attribute {
-    ResourceDefinition { output_fields: Vec<Field> },
+    ResourceDefinition { outputs: Vec<PatType> },
     ResourceImplementation,
     ProviderDefintion,
     ProviderImplementation,
@@ -20,7 +20,7 @@ impl Parse for Attribute {
         if content.peek(keyword::resource_definition) {
             content.parse::<keyword::resource_definition>()?;
 
-            let mut output_fields: Vec<Field> = Vec::new();
+            let mut outputs: Vec<PatType> = Vec::new();
 
             if content.peek(Paren) {
                 let resource_def_content;
@@ -32,11 +32,15 @@ impl Parse for Attribute {
                 syn::braced!(outputs_content in resource_def_content);
 
                 while !outputs_content.is_empty() {
-                    output_fields.push(Field::parse_named(&outputs_content)?);
+                    outputs.push(outputs_content.parse::<PatType>()?);
+
+                    if outputs_content.peek(Token![,]) {
+                        outputs_content.parse::<Token![,]>()?;
+                    }
                 }
             }
 
-            Ok(Self::ResourceDefinition { output_fields })
+            Ok(Self::ResourceDefinition { outputs })
         } else if content.peek(keyword::provider_definition) {
             content.parse::<keyword::provider_definition>()?;
             Ok(Self::ProviderDefintion)
@@ -76,15 +80,30 @@ mod test {
     }
 
     #[test]
-    fn test_resource_provider_attribute_parses_resource_def_with_output_correctly() {
+    fn test_resource_provider_attribute_parses_resource_def_with_single_output_correctly() {
         let input = quote! {
             #[resource_definition(outputs = {foo: String})]
         };
 
         let result: Attribute = parse2(input).unwrap();
 
-        if let Attribute::ResourceDefinition { output_fields } = result {
-            assert_eq!(output_fields.len(), 1);
+        if let Attribute::ResourceDefinition { outputs } = result {
+            assert_eq!(outputs.len(), 1);
+        } else {
+            panic!("parsed to incorrect attribute");
+        }
+    }
+
+    #[test]
+    fn test_resource_provider_attribute_parses_resource_def_with_double_output_correctly() {
+        let input = quote! {
+            #[resource_definition(outputs = {foo: String, bar: i32})]
+        };
+
+        let result: Attribute = parse2(input).unwrap();
+
+        if let Attribute::ResourceDefinition { outputs } = result {
+            assert_eq!(outputs.len(), 2);
         } else {
             panic!("parsed to incorrect attribute");
         }
