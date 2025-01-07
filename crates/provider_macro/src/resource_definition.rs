@@ -1,10 +1,10 @@
 use quote::{format_ident, quote, ToTokens};
 use syn::{
-    spanned::Spanned, token::Pub, Field, Fields, Ident, Item, ItemStruct, Pat, PatIdent, PatType,
-    Token, Visibility,
+    spanned::Spanned, token::Pub, Field, Fields, Item, ItemStruct, Pat, PatIdent, PatType, Token,
+    Visibility,
 };
 
-const OUTPUT_IDENTIFIER: &str = "__output";
+const OUTPUT_IDENTIFIER: &str = "__output_";
 
 pub(crate) struct ResourceDef {
     item_struct: ItemStruct,
@@ -25,7 +25,7 @@ impl ResourceDef {
         if let Fields::Named(ref mut named_fields) = item_struct.fields {
             outputs.iter_mut().for_each(|p| {
                 let ident = format_ident!(
-                    "{}_{}",
+                    "{}{}",
                     OUTPUT_IDENTIFIER,
                     p.pat.as_ref().to_token_stream().to_string()
                 );
@@ -62,32 +62,8 @@ impl ResourceDef {
                 }
             });
 
-        let output_field_name = output_field.iter().filter_map(|f| f.ident.clone());
-        let non_output_field_name = non_output_field.iter().filter_map(|f| f.ident.clone());
-        let non_output_pat = non_output_field.iter().map(|f| {
-            let ident = f.ident.clone().unwrap();
-            let pat_ident = PatIdent {
-                attrs: Vec::new(),
-                by_ref: None,
-                mutability: None,
-                ident,
-                subpat: None,
-            };
-
-            PatType {
-                attrs: Vec::new(),
-                pat: Box::new(Pat::Ident(pat_ident)),
-                colon_token: Token![:](f.ty.span()),
-                ty: Box::new(f.ty.clone()),
-            }
-        });
-
-        let new_fn = Self::expand_new_method(
-            non_output_pat,
-            non_output_field_name,
-            output_field_name.clone(),
-        );
-        let getter_fns = Self::expand_getters(output_field_name);
+        let new_fn = Self::expand_new_method(&output_field, &non_output_field);
+        let getter_fns = Self::expand_getters(&output_field);
 
         quote! {
             #[allow(dead_code)]
@@ -100,15 +76,34 @@ impl ResourceDef {
         }
     }
 
-    fn expand_new_method<
-        P: Iterator<Item = PatType>,
-        NF: Iterator<Item = Ident>,
-        OF: Iterator<Item = Ident>,
-    >(
-        non_output_pat: P,
-        non_output_field_name: NF,
-        output_field_name: OF,
+    fn expand_new_method(
+        output_field: &Vec<Field>,
+        non_output_field: &Vec<Field>,
     ) -> proc_macro2::TokenStream {
+        let output_field_name = output_field.iter().filter_map(|f| f.ident.clone());
+        let non_output_field_name = non_output_field.iter().filter_map(|f| f.ident.clone());
+
+        let non_output_pat = non_output_field.iter().filter_map(|f| {
+            if let Some(ident) = f.ident.clone() {
+                let pat_ident = PatIdent {
+                    attrs: Vec::new(),
+                    by_ref: None,
+                    mutability: None,
+                    ident,
+                    subpat: None,
+                };
+
+                Some(PatType {
+                    attrs: Vec::new(),
+                    pat: Box::new(Pat::Ident(pat_ident)),
+                    colon_token: Token![:](f.ty.span()),
+                    ty: Box::new(f.ty.clone()),
+                })
+            } else {
+                None
+            }
+        });
+
         quote! {
             pub fn new(
                 #(#non_output_pat)*
@@ -121,13 +116,27 @@ impl ResourceDef {
         }
     }
 
-    fn expand_getters<OF: Iterator<Item = Ident>>(
-        output_field_name: OF,
-    ) -> proc_macro2::TokenStream {
-        let getter_name = output_field_name.map(|i| format_ident!("get_{}", i));
+    fn expand_getters(output_field: &Vec<Field>) -> proc_macro2::TokenStream {
+        let output_field_name = output_field.iter().filter_map(|f| f.ident.clone());
+        let output_field_type = output_field.iter().map(|f| f.ty.clone());
+
+        let getter_name = output_field_name
+            .clone()
+            .filter_map(|i| {
+                let ident = i.to_string();
+                ident
+                    .split(OUTPUT_IDENTIFIER)
+                    .filter(|s| !s.is_empty())
+                    .next()
+                    .map(|s| s.to_string())
+            })
+            .map(|i| format_ident!("get_{}", i));
+
         quote! {
             #(
-                pub fn #getter_name(&self) {}
+                pub fn #getter_name(&self) -> #output_field_type {
+                    self.#output_field_name
+                }
             )*
         }
     }

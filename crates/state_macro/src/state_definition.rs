@@ -18,20 +18,20 @@ impl StateDefintion {
         let resource_name = self.resources.iter().map(|r| r.expand_name());
 
         quote! {
-            struct State<P> {
+            pub struct State<P> {
                 provider: P
             }
 
             impl<P: #provider_trait_name> State<P> {
 
-                fn new(provider: P) -> Self {
+                pub fn new(provider: P) -> Self {
                     Self {
                         provider
                     }
                 }
 
                 #[allow(unused_variables)]
-                fn plan(&self) {
+                pub fn plan(&self) {
                     #(
                         #resource_instantiation
                         let res = self.provider.get(&#resource_name);

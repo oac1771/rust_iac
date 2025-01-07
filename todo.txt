@@ -1,3 +1,2 @@
-create getters for output entries
-
-make inner fields private and use getters instead
+refactor dfs workflow
+refactor expansion stuff in resource_def

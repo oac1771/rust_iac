@@ -15,7 +15,7 @@ mod dummy_provider {
         }
     }
 
-    #[resource_definition(outputs = {id: String})]
+    #[resource_definition(outputs = {id: i32})]
     struct DummyResourceA {
         id_a: i32,
     }

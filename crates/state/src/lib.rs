@@ -1,11 +1,12 @@
 mod provider;
 mod state;
 
-// struct Foo;
+// use provider::dummy_provider::prelude::DummyProvider;
+// use state::State;
 
-// impl Foo {
-//     fn new(hi: String, hello: String) {}
-// }
-// fn foo() {
-//     Foo::new("hi".to_string(), "hello".to_string());
+// fn _plan() {
+//     let provider = DummyProvider;
+//     let state = State::new(provider);
+
+//     state.plan()
 // }

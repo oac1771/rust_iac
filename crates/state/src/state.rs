@@ -3,12 +3,12 @@ use state_macro::state;
 
 state! {
 
-    #[resource(name = zip)]
+    #[resource(name = resource_a)]
     DummyResourceB {
-        id_b: bar.get___output_id(),
+        id_b: resource_b.get_id(),
     }
 
-    #[resource(name = bar)]
+    #[resource(name = resource_b)]
     DummyResourceA {
         id_a: 10,
     }
