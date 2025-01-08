@@ -1,9 +1,9 @@
 [workspace]
 resolver = "2"
 members = [ 
-    "crates/helpers", "crates/integration_tests", 
+    "crates/helpers", 
+    "crates/integration_tests", 
     "crates/provider_macro", 
-    "crates/state",
     "crates/state_macro"
 ]
 
