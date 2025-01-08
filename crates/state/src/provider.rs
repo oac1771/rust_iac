@@ -27,6 +27,10 @@ mod dummy_provider {
         fn payload(&self) -> Self::Payload {
             "DummyResourceA".to_string()
         }
+
+        fn set_outputs(&mut self) {
+            self.set_id(420);
+        }
     }
 
     #[resource_definition]

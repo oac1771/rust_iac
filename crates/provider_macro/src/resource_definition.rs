@@ -64,6 +64,7 @@ impl ResourceDef {
 
         let new_fn = Self::expand_new_method(&output_field, &non_output_field);
         let getter_fns = Self::expand_getters(&output_field);
+        let setter_fns = Self::expand_setters(&output_field);
 
         quote! {
             #[allow(dead_code)]
@@ -72,6 +73,7 @@ impl ResourceDef {
             impl #item_struct_name {
                 #new_fn
                 #getter_fns
+                #setter_fns
             }
         }
     }
@@ -141,6 +143,31 @@ impl ResourceDef {
         }
     }
 
+    fn expand_setters(output_field: &Vec<Field>) -> proc_macro2::TokenStream {
+        let output_field_name = output_field.iter().filter_map(|f| f.ident.clone());
+        let output_field_type = output_field.iter().map(|f| f.ty.clone());
+
+        let setter_name = output_field_name
+            .clone()
+            .filter_map(|i| {
+                let ident = i.to_string();
+                ident
+                    .split(OUTPUT_IDENTIFIER)
+                    .filter(|s| !s.is_empty())
+                    .next()
+                    .map(|s| s.to_string())
+            })
+            .map(|i| format_ident!("set_{}", i));
+
+        quote! {
+            #(
+                pub fn #setter_name(&mut self, val: #output_field_type) {
+                    self.#output_field_name = val
+                }
+            )*
+        }
+    }
+
     pub(crate) fn expand_resource_trait() -> proc_macro2::TokenStream {
         let resource_trait_name = helpers::resource_trait_name();
         quote! {
@@ -148,6 +175,8 @@ impl ResourceDef {
                 type Payload;
 
                 fn payload(&self) -> Self::Payload;
+
+                fn set_outputs(&mut self) {}
             }
         }
     }
